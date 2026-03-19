@@ -1,0 +1,27 @@
+{
+  "name": "accessibility-checker-api",
+  "version": "1.0.0",
+  "description": "Global Web Accessibility Checker API - WCAG 2.1 compliance scanning",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "puppeteer": "^21.6.1",
+    "axe-core": "^4.8.2",
+    "better-sqlite3": "^9.2.2",
+    "uuid": "^9.0.0",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
