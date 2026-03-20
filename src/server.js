@@ -10,7 +10,6 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
-app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -31,21 +30,20 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use((req, res) => {
-  res.status(404).json({ success: false, error: `Route ${req.method} ${req.path} not found.` });
-});
-
-app.use((err, req, res, _next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ success: false, error: 'Internal server error.' });
-});
-
-// Init DB first, then mount routes and start server
 getDb().then(() => {
   const scanRoutes  = require('./routes/scan');
   const adminRoutes = require('./routes/admin');
   app.use('/v1', scanRoutes);
   app.use('/admin', adminRoutes);
+
+  app.use((req, res) => {
+    res.status(404).json({ success: false, error: `Route ${req.method} ${req.path} not found.` });
+  });
+
+  app.use((err, req, res, _next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ success: false, error: 'Internal server error.' });
+  });
 
   app.listen(PORT, () => {
     console.log(`
