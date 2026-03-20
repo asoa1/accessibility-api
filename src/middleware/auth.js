@@ -1,6 +1,5 @@
-const db = require('../utils/database');
+const { get, run } = require('../utils/database');
 
-// Plan limits (scans per day)
 const PLAN_LIMITS = {
   free:       5,
   basic:      100,
@@ -8,8 +7,7 @@ const PLAN_LIMITS = {
   enterprise: 999999
 };
 
-function requireApiKey(req, res, next) {
-  // Accept key from header or query param
+async function requireApiKey(req, res, next) {
   const apiKey = req.headers['x-api-key'] || req.query.api_key;
 
   if (!apiKey) {
@@ -19,28 +17,18 @@ function requireApiKey(req, res, next) {
     });
   }
 
-  // Look up key in database
-  const record = db.prepare(`
-    SELECT * FROM api_keys WHERE key = ? AND active = 1
-  `).get(apiKey);
+  const record = await get('SELECT * FROM api_keys WHERE key = ? AND active = 1', [apiKey]);
 
   if (!record) {
-    return res.status(401).json({
-      success: false,
-      error: 'Invalid or inactive API key.'
-    });
+    return res.status(401).json({ success: false, error: 'Invalid or inactive API key.' });
   }
 
-  // Reset daily counter if it's a new day
   const today = new Date().toISOString().split('T')[0];
   if (record.last_reset !== today) {
-    db.prepare(`
-      UPDATE api_keys SET calls_today = 0, last_reset = ? WHERE id = ?
-    `).run(today, record.id);
+    await run('UPDATE api_keys SET calls_today = 0, last_reset = ? WHERE id = ?', [today, record.id]);
     record.calls_today = 0;
   }
 
-  // Check daily limit
   const limit = PLAN_LIMITS[record.plan] || PLAN_LIMITS.free;
   if (record.calls_today >= limit) {
     return res.status(429).json({
@@ -50,8 +38,7 @@ function requireApiKey(req, res, next) {
     });
   }
 
-  // Attach to request for use in routes
-  req.apiKey = record;
+  req.apiKey    = record;
   req.planLimit = limit;
   next();
 }
